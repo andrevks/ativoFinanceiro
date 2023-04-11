@@ -1,15 +1,32 @@
-FROM ubuntu:latest
-WORKDIR git
-RUN apt update -y
-RUN apt upgrade -y
-RUN apt install -y micro bat git git-flow curl
-RUN git clone https://github.com/JGuilhermeSN/easywallet/
-RUN curl -fsSL https://code-server.dev/install.sh | sh
-COPY config.yaml /root/.config/code-server/config.yaml
-RUN code-server --install-extension eamodio.gitlens
-RUN code-server --install-extension PKief.material-icon-theme
-RUN code-server --install-extension naumovs.color-highlight
-RUN code-server --install-extension humao.rest-client
-RUN code-server --install-extension ms-azuretools.vscode-docker
-EXPOSE 8080
-CMD ["code-server", "."]
+# First stage - Base
+ARG NODE_IMAGE=node:lts-slim
+
+FROM $NODE_IMAGE AS base
+RUN mkdir -p /home/node/app && chown node:node /home/node/app
+WORKDIR /home/node/app
+USER node
+RUN mkdir tmp
+
+# Second stage - Dependencies
+
+FROM base AS dependencies
+COPY --chown=node:node ./package*.json ./
+RUN npm i
+COPY --chown=node:node . .
+
+# Third stage - Build
+
+FROM dependencies AS build
+RUN node ace build --production
+
+# Fourth stage - Production
+
+FROM base AS production
+ENV NODE_ENV=production
+ENV PORT=$PORT
+ENV HOST=0.0.0.0
+COPY --chown=node:node ./package*.json ./
+RUN npm i --omit=dev
+COPY --chown=node:node --from=build /home/node/app/build .
+EXPOSE $PORT
+CMD [ "node", "server.js" ]
