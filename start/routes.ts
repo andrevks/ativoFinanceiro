@@ -4,4 +4,4 @@ Route.get('/', async () => {
   return { hello: 'world' }
 })
 
-Route.get('assets', 'AssetsController.index')
+Route.resource('assets', 'AssetsController').apiOnly().only(['index'])
