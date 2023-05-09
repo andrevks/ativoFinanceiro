@@ -24,6 +24,15 @@ export default class KeycloakAuth {
         return response.status(401).send({ message: 'Unauthorized', data: 'Invalid token' })
       }
 
+      // Check if the user has the required roles
+      const roles = token.content.realm_access.roles
+
+      //create a user for the request
+      request['user'] = {
+        ...token.content,
+        roles,
+      }
+
       await next()
     } catch (error) {
       console.error(error)
