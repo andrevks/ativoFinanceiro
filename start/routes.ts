@@ -6,18 +6,9 @@ Route.get('/', async () => {
   return { hello: 'world' }
 })
 
-Route.get('/protected', async ({ request, response }) => {
-  const roles = request['user'].roles
-  const requiredRoles = ['admin', 'user']
-  const hasRequiredRoles = roles.some((role) => requiredRoles.includes(role))
-  if (!hasRequiredRoles) {
-    return response.forbidden({
-      message: `You don't have the required roles: ${requiredRoles}`,
-    })
-  }
-
-  return { message: 'This is a protected route', user: request['user'] }
-}).middleware('keycloackAuth')
+Route.get('/protected', async ({ request }) => {
+  return { message: 'This is a protected route ', user: request['user'] }
+}).middleware(['keycloackAuth:admin,user'])
 
 Route.post('/authenticate', async ({ request, response }) => {
   const { username, password } = request.only(['username', 'password'])

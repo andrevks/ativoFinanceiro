@@ -4,7 +4,11 @@ import Token from 'keycloak-connect/middleware/auth-utils/token'
 import Signature from 'keycloak-connect/middleware/auth-utils/signature'
 
 export default class KeycloakAuth {
-  public async handle({ request, response }: HttpContextContract, next: () => Promise<void>) {
+  public async handle(
+    { request, response }: HttpContextContract,
+    next: () => Promise<void>,
+    requiredRoles: string[]
+  ) {
     try {
       // Validate token with Keycloak
       const headers = request.headers()
@@ -27,6 +31,13 @@ export default class KeycloakAuth {
       // Check if the user has the required roles
       const roles = token.content.realm_access.roles
 
+      const hasRequiredRoles = roles.some((role) => requiredRoles.includes(role))
+      if (!hasRequiredRoles) {
+        return response.forbidden({
+          message: `You don't have the required roles: ${requiredRoles}`,
+        })
+      }
+
       //create a user for the request
       request['user'] = {
         ...token.content,
@@ -36,7 +47,7 @@ export default class KeycloakAuth {
       await next()
     } catch (error) {
       console.error(error)
-      return response.status(401).send({ message: 'Unauthorized' })
+      return response.unauthorized({ message: 'Unauthorized', data: error.message })
     }
   }
 }
