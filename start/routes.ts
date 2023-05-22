@@ -7,7 +7,7 @@ Route.get('/', async () => {
 })
 
 Route.get('/protected', async ({ request }) => {
-  return { message: 'This is a protected route ', user: request['user'] }
+  return { message: 'You are accessing a protected route ', user: request['user'] }
 }).middleware(['keycloackAuth:admin,user'])
 
 Route.post('/authenticate', async ({ request, response }) => {
