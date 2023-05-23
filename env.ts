@@ -22,4 +22,5 @@ export default Env.rules({
   DRIVE_DISK: Env.schema.enum(['local'] as const),
   NODE_ENV: Env.schema.enum(['development', 'production', 'test'] as const),
   KEYCLOACK_SECRET: Env.schema.string(),
+  ENABLE_RABBITMQ: Env.schema.string(),
 })

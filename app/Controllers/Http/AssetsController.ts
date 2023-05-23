@@ -26,6 +26,9 @@ export default class AssetsController {
       } else {
         data = await yahoo.historical({ symbol, from, to, period })
       }
+
+      if (process.env.ENABLE_RABBITMQ === 'false') return response.ok(data)
+
       const rabbit = new RabbitmqService('amqp://admin:admin@127.0.0.1:5672')
       await rabbit.start()
       await rabbit.publishInExchange(
@@ -33,7 +36,8 @@ export default class AssetsController {
         'rk.ativofinanceiro.preco-por-ativo',
         JSON.stringify(data)
       )
-      return data
+
+      return 'Msg published on rabbitmq'
     } catch (error) {
       return response.badRequest(error.message)
     }
