@@ -1,19 +1,20 @@
-import { Connection, Channel, connect, Message } from 'amqplib'
+import { Connection, Channel, connect, Message, ConsumeMessage } from 'amqplib'
 
 export default class RabbitmqService {
   private conn: Connection
   private channel: Channel
 
-  constructor(private uri: string) {}
+  constructor(
+    private uri: string,
+    private exchangeName: string,
+    private qName: string,
+    private rkName: string
+  ) {}
 
   public async start(): Promise<void> {
     this.conn = await connect(this.uri)
     this.channel = await this.conn.createChannel()
-    this.createExchangeWithQueueAndBind(
-      'de.ativofinanceiro.preco',
-      'q.ativofinanceiro.busca',
-      'rk.ativofinanceiro.preco-por-ativo'
-    )
+    this.createExchangeWithQueueAndBind(this.exchangeName, this.qName, this.rkName)
   }
 
   public async publishInQueue(queue: string, message: string) {
@@ -28,8 +29,19 @@ export default class RabbitmqService {
     return this.channel.publish(exchange, routingKey, Buffer.from(message))
   }
 
+  public async publishInExchangeWithCorrelationId(
+    exchange: string,
+    routingKey: string,
+    message: string,
+    correlationId: string
+  ): Promise<boolean> {
+    return this.channel.publish(exchange, routingKey, Buffer.from(message), {
+      correlationId,
+    })
+  }
+
   public async consume(queue: string, callback: (message: Message) => void) {
-    return this.channel.consume(queue, (message: any) => {
+    return this.channel.consume(queue, (message: ConsumeMessage) => {
       callback(message)
       this.channel.ack(message)
     })
