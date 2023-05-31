@@ -38,7 +38,6 @@ export default class IndexAssetValidator {
       },
       [rules.regex(/^(d|w|m|v)$/), rules.maxLength(1), rules.minLength(1)]
     ),
-    correlationId: schema.string({}, [rules.uuid({ version: '4' })]),
   })
 
   public messages: CustomMessages = {
