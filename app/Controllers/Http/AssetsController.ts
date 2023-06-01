@@ -10,7 +10,7 @@ export default class AssetsController {
       // Run the background task
       runBackgroundTask({ symbol, from, to, period, type })
 
-      return response.ok('Background task started')
+      return response.ok(`Processamento de busca do ativo ${symbol} iniciado`)
     } catch (error) {
       return response.badRequest(error.message)
     }
